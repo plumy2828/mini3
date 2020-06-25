@@ -6,6 +6,9 @@
 #include <vector>
 #include <cassert>
 
+viod test(){
+    return 0;
+}
 struct Point {
     int x, y;
 	Point() : Point(0, 0) {}
