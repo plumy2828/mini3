@@ -213,34 +213,44 @@ public:
 
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!set value start!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
 int mapp[8][8]{
-    1000, -50, 20, 20, 20, 20, -50, 1000,
-    -50, -500, -10, -10, -10, -10, -500, -50,
-    20, -10, 3, 0, 0, 3, -10, 20,
-    20, -10, 0, 0, 0, 0, -10, 20,
-    20, -10, 0, 0, 0, 0, -10, 20,
-    20, -10, 3, 0, 0, 3, -10, 20,
-    -50, -500, -10, -10, -10, -10, -500, -50,
-    1000, -50, 20, 20, 20, 20, -50, 1000
+    500, -25, 10, 5, 5, 10, -25, 500,
+    -25, -45, 1, 1, 1, 1, -45, -25,
+    10, 1, 3, 2, 2, 3, 1, 10,
+    5, 1, 2, 1, 1, 2, 1, 5,
+    5, 1, 2, 1, 1, 2, 1, 5,
+    10, 1, 3, 2, 2, 3, 1, 10,
+    -25, -45, 1, 1, 1, 1, -45, -25,
+    500, -25, 10, 5, 5, 10, -25, 500
 };
 
-
-int set_value(OthelloBoard &game, Point p){
+int set_value(OthelloBoard &in, Point p){
+    OthelloBoard game = in;
     int value = 0;
-    game.set_disc(p, game.cur_player);
+    game.put_disc(p);
 
     //cal position's point
     for(int i = 0; i < SIZE; i++){
         for(int j = 0; j < SIZE; j++){
-            if(i == p.x && j == p.y)
+            if(game.board[i][j] == player)
                 value += mapp[i][j];
+            else if(game.board[i][j] == (3-player))
+                value -= mapp[i][j];
         }
     }
-    //cal the flipped number
-    value += game.flip_num(p);
+    return value;
+}
 
-    //remember to reset
-    game.set_disc(p, 0);
-
+int set_value2(OthelloBoard &in){
+    int value = 0;
+    //cal position's point
+    for(int i = 0; i < SIZE; i++){
+        for(int j = 0; j < SIZE; j++){
+            if(in.board[i][j] == player)
+                value += mapp[i][j];
+            else if(in.board[i][j] == (3-player))
+                value -= mapp[i][j];
+        }
+    }
     return value;
 }
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!set value end!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -287,6 +297,17 @@ int minimax(int depth, int next_valid_spots_Index,
 			if (beta <= alpha)
 				break;
 		}
+		if(next.next_valid_spots.size() == 0){
+            int val = set_value2(next);
+            best = max(val, best);
+            //better choice
+            if(best > alpha && depth == 0){
+                better[better_index] = 0;
+                better_index++;
+			}
+
+			alpha = max(alpha, best);
+		}
 		return best;
 	}
 	else{// depth = 1
@@ -300,6 +321,11 @@ int minimax(int depth, int next_valid_spots_Index,
 			// Alpha Beta Pruning
 			if (beta <= alpha)
 				break;
+		}
+		if(next.next_valid_spots.size() == 0){
+            int val = set_value2(next);
+            best = min(val, best);
+			beta = min(beta, best);
 		}
 		return best;
 	}
@@ -326,40 +352,11 @@ void write_valid_spot(std::ofstream& fout, OthelloBoard &first) {
     // Remember to flush the output to ensure the last action is written to file.
     fout << p.x << " " << p.y << std::endl;
     fout.flush();*/
-    if(n_valid_spots > 2){
-        int num = minimax(0, 0, true, first, MIN, MAX);
+    int num = minimax(0, 0, true, first, MIN, MAX);
 
-        Point pp = first.next_valid_spots[better[--better_index]];
-        fout << pp.x << " " << pp.y << std::endl;
-        fout.flush();
-    }
-    if(n_valid_spots == 2){
-        OthelloBoard tmp = first;
-        OthelloBoard tmpp = first;
-
-        first.put_disc(first.next_valid_spots[0]);
-        first.put_disc(first.next_valid_spots[0]);
-        int one = first.disc_count[player];
-
-        tmp.put_disc(tmp.next_valid_spots[1]);
-        tmp.put_disc(tmp.next_valid_spots[0]);
-        int two = tmp.disc_count[player];
-        if(one >= two){
-            Point pp = tmpp.next_valid_spots[0];
-            fout << pp.x << " " << pp.y << std::endl;
-            fout.flush();
-        }
-        else{
-            Point pp = tmpp.next_valid_spots[1];
-            fout << pp.x << " " << pp.y << std::endl;
-            fout.flush();
-        }
-    }
-    if(n_valid_spots == 1){
-        Point pp = first.next_valid_spots[0];
-        fout << pp.x << " " << pp.y << std::endl;
-        fout.flush();
-    }
+    Point pp = first.next_valid_spots[better[--better_index]];
+    fout << pp.x << " " << pp.y << std::endl;
+    fout.flush();
 }
 
 int main(int, char** argv) {
