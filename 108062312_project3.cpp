@@ -146,9 +146,9 @@ public:
             next_valid_spots.push_back(p);
         }
         cur_player = co.cur_player;
-        disc_count[EMPTY] = disc_count[EMPTY];
-        disc_count[BLACK] = disc_count[BLACK];
-        disc_count[WHITE] = disc_count[WHITE];
+        disc_count[EMPTY] = co.disc_count[EMPTY];
+        disc_count[BLACK] = co.disc_count[BLACK];
+        disc_count[WHITE] = co.disc_count[WHITE];
         done = false;
         winner = -1;
     }
@@ -181,20 +181,7 @@ public:
         // Give control to the other player.
         cur_player = get_next_player(cur_player);
         next_valid_spots = get_valid_spots();
-        // Check Win
-        if (next_valid_spots.size() == 0) {
-            cur_player = get_next_player(cur_player);
-            next_valid_spots = get_valid_spots();
-            if (next_valid_spots.size() == 0) {
-                // Game ends
-                done = true;
-                int white_discs = disc_count[WHITE];
-                int black_discs = disc_count[BLACK];
-                if (white_discs == black_discs) winner = EMPTY;
-                else if (black_discs > white_discs) winner = BLACK;
-                else winner = WHITE;
-            }
-        }
+
         return true;
     }
     int flip_num(Point center) {
@@ -225,33 +212,29 @@ public:
 /*------------------------------class end-------------------------------------------*/
 
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!set value start!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-Point edge1 = Point(0, 0), edge2 = Point(0, 7), edge3 = Point(7, 0), edge4 = Point(7, 7);
-Point X1 = Point(1, 1), X2 = Point(1, 6), X3 = Point(6, 1), X4 = Point(6, 6);
-Point x1 = Point(0, 1), x2 = Point(0, 6), x3 = Point(1, 0), x4 = Point(1, 7), x5 = Point(6, 0), x6 = Point(6, 7), x7 = Point(7, 1), x8 = Point(7, 6);
-Point side1 = Point(0, 2), side2 = Point(0, 3), side3 = Point(0, 4), side4 = Point(0, 5), side5 = Point(7, 2), side6 = Point(7, 3), side7 = Point(7, 4), side8 = Point(7, 5), side9 = Point(2, 0), side10 = Point(3, 0), side11 = Point(4, 0), side12 = Point(5, 0), side13 = Point(2, 7), side14 = Point(3, 7), side15 = Point(4, 7), side16 = Point(5, 7);
-Point great1 = Point(2, 2), great2 = Point(5, 5), great3 = Point(5, 3), great4 = Point(3, 5);
-Point bad1 = Point(1, 2), bad2 = Point(1, 3), bad3 = Point(1, 4), bad4 = Point(1, 5), bad5 = Point(6, 2), bad6 = Point(6, 3), bad7 = Point(6, 4), bad8 = Point(6, 5), bad9 = Point(2, 1), bad10 = Point(3, 1), bad11 = Point(4, 1), bad12 = Point(5, 1), bad13 = Point(2, 6), bad14 = Point(3, 6), bad15 = Point(4, 6), bad16 = Point(5, 6);
+int mapp[8][8]{
+    1000, -50, 20, 20, 20, 20, -50, 1000,
+    -50, -500, -10, -10, -10, -10, -500, -50,
+    20, -10, 3, 0, 0, 3, -10, 20,
+    20, -10, 0, 0, 0, 0, -10, 20,
+    20, -10, 0, 0, 0, 0, -10, 20,
+    20, -10, 3, 0, 0, 3, -10, 20,
+    -50, -500, -10, -10, -10, -10, -500, -50,
+    1000, -50, 20, 20, 20, 20, -50, 1000
+};
+
 
 int set_value(OthelloBoard &game, Point p){
     int value = 0;
     game.set_disc(p, game.cur_player);
 
     //cal position's point
-    if(p == edge1 || p == edge2 || p == edge3 || p == edge4)
-        value += 1000;
-    else if(p == great1 || p == great2 || p == great3 || p == great4)
-        value += 3;
-    else if(p == side1 || p == side2 || p == side3 || p == side4 || p == side5 || p == side6 || p == side7 || p == side8 || p == side9 || p == side10 || p == side11 || p == side12 || p == side13 || p == side14 || p == side15 || p == side16)
-        value += 20;
-    else if(p == X1 || p == X2 || p == X3 || p == X4)
-        value -= 500;
-    else if(p == x1 || p == x2 || p == x3 || p == x4 || p == x5 || p == x6 || p == x7 || p == x8)
-        value -= 50;
-    else if(p == bad1 || p == bad2 || p == bad3 || p == bad4 || p == bad5 || p == bad6 || p == bad7 || p == bad8 || p == bad9 || p == bad10 || p == bad11 || p == bad12 || p == bad13 || p == bad14 || p == bad15 || p == bad16)
-        value -= 10;
-    else
-        value += 0;
-
+    for(int i = 0; i < SIZE; i++){
+        for(int j = 0; j < SIZE; j++){
+            if(i == p.x && j == p.y)
+                value += mapp[i][j];
+        }
+    }
     //cal the flipped number
     value += game.flip_num(p);
 
@@ -286,7 +269,7 @@ int minimax(int depth, int next_valid_spots_Index,
         next.put_disc(p);
 	}
 
-	if (maximizingPlayer){
+	if (maximizingPlayer){//depth = 0 or 2
 		int best = MIN;
 		// Recur for left and right children
 		for (int i = 0; i < next.next_valid_spots.size(); i++){
@@ -306,7 +289,7 @@ int minimax(int depth, int next_valid_spots_Index,
 		}
 		return best;
 	}
-	else{
+	else{// depth = 1
 		int best = MAX;
 		// Recur for left and right children
 		for (int i = 0; i < next.next_valid_spots.size(); i++) {
@@ -338,16 +321,45 @@ void write_valid_spot(std::ofstream& fout, OthelloBoard &first) {
     int n_valid_spots = first.next_valid_spots.size();
     srand(time(NULL));
     // Choose random spot. (Not random uniform here)
-    int index = (rand() % n_valid_spots);
+    /*int index = (rand() % n_valid_spots);
     Point p = first.next_valid_spots[index];
     // Remember to flush the output to ensure the last action is written to file.
     fout << p.x << " " << p.y << std::endl;
-    fout.flush();
-    int num = minimax(0, 0, true, first, MIN, MAX);
+    fout.flush();*/
+    if(n_valid_spots > 2){
+        int num = minimax(0, 0, true, first, MIN, MAX);
 
-    Point pp = first.next_valid_spots[better[--better_index]];
-    fout << pp.x << " " << pp.y << std::endl;
-    fout.flush();
+        Point pp = first.next_valid_spots[better[--better_index]];
+        fout << pp.x << " " << pp.y << std::endl;
+        fout.flush();
+    }
+    if(n_valid_spots == 2){
+        OthelloBoard tmp = first;
+        OthelloBoard tmpp = first;
+
+        first.put_disc(first.next_valid_spots[0]);
+        first.put_disc(first.next_valid_spots[0]);
+        int one = first.disc_count[player];
+
+        tmp.put_disc(tmp.next_valid_spots[1]);
+        tmp.put_disc(tmp.next_valid_spots[0]);
+        int two = tmp.disc_count[player];
+        if(one >= two){
+            Point pp = tmpp.next_valid_spots[0];
+            fout << pp.x << " " << pp.y << std::endl;
+            fout.flush();
+        }
+        else{
+            Point pp = tmpp.next_valid_spots[1];
+            fout << pp.x << " " << pp.y << std::endl;
+            fout.flush();
+        }
+    }
+    if(n_valid_spots == 1){
+        Point pp = first.next_valid_spots[0];
+        fout << pp.x << " " << pp.y << std::endl;
+        fout.flush();
+    }
 }
 
 int main(int, char** argv) {
