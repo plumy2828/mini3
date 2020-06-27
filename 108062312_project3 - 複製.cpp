@@ -14,6 +14,7 @@ struct Point {
     int x, y;
     Point() : Point(0, 0) {}
 	Point(float x, float y) : x(x), y(y) {}
+
 	bool operator==(const Point& rhs) const {
 		return x == rhs.x && y == rhs.y;
 	}
@@ -71,9 +72,7 @@ private:
     int get_disc(Point p) const {
         return board[p.x][p.y];
     }
-    void set_disc(Point p, int disc) {
-        board[p.x][p.y] = disc;
-    }
+
     bool is_disc_at(Point p, int disc) const {
         if (!is_spot_on_board(p))
             return false;
@@ -158,6 +157,10 @@ public:
                 board[i][j] = co.board[i][j];
             }
         }
+        for(int i = 0; i < co.next_valid_spots.size(); i++){
+            Point p = co.next_valid_spots[i];
+            next_valid_spots.push_back(p);
+        }
         cur_player = co.cur_player;
         disc_count[EMPTY] = disc_count[EMPTY];
         disc_count[BLACK] = disc_count[BLACK];
@@ -165,6 +168,11 @@ public:
         done = false;
         winner = -1;
     }
+
+    void set_disc(Point p, int disc) {
+        board[p.x][p.y] = disc;
+    }
+
     std::vector<Point> get_valid_spots() const {
         std::vector<Point> valid_spots;
         for (int i = 0; i < SIZE; i++) {
@@ -225,6 +233,7 @@ public:
                 p = p + dir;
             }
         }
+        return num;
     }
 };
 
@@ -239,8 +248,13 @@ Point side1 = Point(0, 2), side2 = Point(0, 3), side3 = Point(0, 4), side4 = Poi
 Point great1 = Point(2, 2), great2 = Point(5, 5), great3 = Point(5, 3), great4 = Point(3, 5);
 Point bad1 = Point(1, 2), bad2 = Point(1, 3), bad3 = Point(1, 4), bad4 = Point(1, 5), bad5 = Point(6, 2), bad6 = Point(6, 3), bad7 = Point(6, 4), bad8 = Point(6, 5), bad9 = Point(2, 1), bad10 = Point(3, 1), bad11 = Point(4, 1), bad12 = Point(5, 1), bad13 = Point(2, 6), bad14 = Point(3, 6), bad15 = Point(4, 6), bad16 = Point(5, 6);
 
-int set_value(OthelloBoard game, Point p){
+int set_value(OthelloBoard &game, Point p){
     int value = 0;
+    game.set_disc(p, game.cur_player);
+    //debug
+    cout << "cal value!!!\n";
+    cout << "now value = " << value << "\n";
+    //
     if(p == edge1 || p == edge2 || p == edge3 || p == edge4)
         value += 1000;
     else if(p == great1 || p == great2 || p == great3 || p == great4)
@@ -256,7 +270,17 @@ int set_value(OthelloBoard game, Point p){
     else
         value += 0;
 
+    //debug
+    cout << "after verify location, value = " << value << "\n";
+    //
+
     value += game.flip_num(p);
+
+    //debug
+    cout << "now cur_player is " << game.cur_player <<"\n";
+    cout << "after cal flip num, value = " << value << "\n";
+    //
+    game.set_disc(p, (3-game.cur_player));
     return value;
 }
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!set value end!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -272,31 +296,86 @@ const int MIN = -100000000;
 //(Initially called for root and maximizer)
 int minimax(int depth, int next_valid_spots_Index,
             bool maximizingPlayer,
-			OthelloBoard game, int alpha,
+			OthelloBoard &game, int alpha,
 			int beta){
 	// Terminating condition. i.e leaf node is reached
 	if (depth == 3){
         Point p = game.next_valid_spots[next_valid_spots_Index];
-        return set_value(game, p);
+
+        //debug
+        cout << "---------------------------------\n";
+        cout << "depth = " << depth << "\n";
+        cout << "board:\n";
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                cout << game.board[i][j] << " ";
+            }
+            cout << "\n";
+        }
+        cout << "now I can take the place (x, y) = ";
+        cout << "(" << p.x << ", " << p.y << ")\n";
+        //
+
+
+        int value = set_value(game, p);
+
+        //debug
+        cout << "\nreturned value is " << value << "\n";
+        //
+
+        return value;
 	}
-	OthelloBoard next = OthelloBoard(game);
+
+	OthelloBoard next = game;
 	if(depth != 0){
         Point p = next.next_valid_spots[next_valid_spots_Index];
+        //debug
+        cout << "---------------------------------\n";
+        cout << "depth = " << depth << "\n";
+        if(depth == 1)
+            cout << "now I take the place (x, y) = ";
+        else if(depth == 2)
+            cout << "now enemy take the place (x, y) = ";
+        cout << "(" << p.x << ", " << p.y << ")\n";
+        //
         next.put_disc(p);
 	}
+	//debug
+    if(depth == 0){
+        cout << "---------------------------------\n";
+        cout << "depth = " << depth << "\n";
+    }
+    cout << "board:\n";
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            cout << next.board[i][j] << " ";
+        }
+        cout << "\n";
+    }
+
+    cout << "next valid point:\n";
+    for (int i = 0; i < next.next_valid_spots.size(); i++) {
+        cout << "(" << next.next_valid_spots[i].x << ", " << next.next_valid_spots[i].y << "), ";
+    }
+    cout << "\n";
+    //
+
 	if (maximizingPlayer){
 		int best = MIN;
 		// Recur for left and right children
 		for (int i = 0; i < next.next_valid_spots.size(); i++){
 			int val = minimax(depth + 1, i, false, next, alpha, beta);
-			if(val > best){
-                best = val;
-                Point p = next.next_valid_spots[next_valid_spots_Index];
+			best = max(val, best);
+            //need to edit:
+            if(best > alpha && depth == 0){
+                Point p = next.next_valid_spots[i];
+                //debug
+                cout << "better choice : ";
+                //
                 cout << p.x << " " << p.y << std::endl;
                 //fout.flush();
 			}
 			alpha = max(alpha, best);
-
 			// Alpha Beta Pruning
 			if (beta <= alpha)
 				break;
@@ -306,7 +385,7 @@ int minimax(int depth, int next_valid_spots_Index,
 	else{
 		int best = MAX;
 		// Recur for left and right children
-		for (int i = 0; i < game.next_valid_spots.size(); i++) {
+		for (int i = 0; i < next.next_valid_spots.size(); i++) {
 			int val = minimax(depth + 1, i, true, next, alpha, beta);
 			best = min(best, val);
 			beta = min(beta, best);
@@ -328,9 +407,7 @@ int minimax(int depth, int next_valid_spots_Index,
 /*-------------------------------------miniMax end-----------------------------------------------------*/
 void write_valid_spot(OthelloBoard &first) {
     int n_valid_spots = first.next_valid_spots.size();
-    //debug
-    cout << "n_valid_spots = " << n_valid_spots << "\n";
-    //
+
 
     srand(time(NULL));
     /* do once security output */
@@ -338,7 +415,10 @@ void write_valid_spot(OthelloBoard &first) {
     int index = (rand() % n_valid_spots);
     Point p = first.next_valid_spots[index];
     // Remember to flush the output to ensure the last action is written to file.
-    cout << p.x << " " << p.y << std::endl;
+
+    //debug
+    cout << "random choice : (";
+    cout << p.x << ", " << p.y << ")"<< std::endl;
 
 
     int num = minimax(0, 0, true, first, MIN, MAX);
@@ -348,22 +428,6 @@ void write_valid_spot(OthelloBoard &first) {
 int main(int, char** argv) {
     read_board();
     OthelloBoard first(in_board);
-
-    //debug
-    cout << "now board:\n";
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
-            cout << first.board[i][j] << " ";
-        }
-        cout << "\n";
-    }
-    cout << "next valid point:\n";
-    for (int i = 0; i < first.next_valid_spots.size(); i++) {
-        cout << "(" << first.next_valid_spots[i].x << ", " << first.next_valid_spots[i].y << "), ";
-    }
-    cout << "\n";
-    //
-
 
     cout << "\n";
     write_valid_spot(first);
