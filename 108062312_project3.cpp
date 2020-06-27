@@ -30,12 +30,41 @@ int player;
 const int SIZE = 8;
 std::array<std::array<int, SIZE>, SIZE> in_board;
 
+
+
+int mapp[8][8]{
+    500, -25, 10, 5, 5, 10, -25, 500,
+    -25, -45, 1, 1, 1, 1, -45, -25,
+    10, 1, 3, 2, 2, 3, 1, 10,
+    5, 1, 2, 1, 1, 2, 1, 5,
+    5, 1, 2, 1, 1, 2, 1, 5,
+    10, 1, 3, 2, 2, 3, 1, 10,
+    -25, -45, 1, 1, 1, 1, -45, -25,
+    500, -25, 10, 5, 5, 10, -25, 500
+};
+
 void read_board(std::ifstream& fin) {
     fin >> player;
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
             fin >> in_board[i][j];
         }
+    }
+    if(in_board[0][0] == player){
+        mapp[0][1] = 50;
+        mapp[1][0] = 50;
+    }
+    if(in_board[0][7] == player){
+        mapp[0][6] = 50;
+        mapp[1][7] = 50;
+    }
+    if(in_board[7][0] == player){
+        mapp[6][0] = 50;
+        mapp[7][1] = 50;
+    }
+    if(in_board[7][7] == player){
+        mapp[6][7] = 50;
+        mapp[7][6] = 50;
     }
 }
 
@@ -212,16 +241,7 @@ public:
 /*------------------------------class end-------------------------------------------*/
 
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!set value start!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-int mapp[8][8]{
-    500, -25, 10, 5, 5, 10, -25, 500,
-    -25, -45, 1, 1, 1, 1, -45, -25,
-    10, 1, 3, 2, 2, 3, 1, 10,
-    5, 1, 2, 1, 1, 2, 1, 5,
-    5, 1, 2, 1, 1, 2, 1, 5,
-    10, 1, 3, 2, 2, 3, 1, 10,
-    -25, -45, 1, 1, 1, 1, -45, -25,
-    500, -25, 10, 5, 5, 10, -25, 500
-};
+
 
 int set_value(OthelloBoard &in, Point p){
     OthelloBoard game = in;
@@ -267,7 +287,7 @@ int minimax(int depth, int next_valid_spots_Index,
 			OthelloBoard &game, int alpha,
 			int beta){
 	// Terminating condition. i.e leaf node is reached
-	if (depth == 3){
+	if (depth == 4){
         Point p = game.next_valid_spots[next_valid_spots_Index];
         int value = set_value(game, p);
         return value;
