@@ -280,7 +280,7 @@ int set_value(OthelloBoard &game, Point p){
     cout << "now cur_player is " << game.cur_player <<"\n";
     cout << "after cal flip num, value = " << value << "\n";
     //
-    game.set_disc(p, (3-game.cur_player));
+    game.set_disc(p, 0);
     return value;
 }
 /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!set value end!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
