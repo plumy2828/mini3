@@ -121,15 +121,7 @@ private:
     }
 
 
-    void read_valid_spots() {
-        int n_valid_spots;
-        cin >> n_valid_spots;
-        int x, y;
-        for (int i = 0; i < n_valid_spots; i++) {
-            cin >> x >> y;
-            next_valid_spots.push_back({x, y});
-        }
-    }
+
 
 public:
     OthelloBoard(std::array<std::array<int, SIZE>, SIZE> in_board) {
@@ -146,7 +138,6 @@ public:
             }
         }
         cur_player = player;
-        read_valid_spots();
         done = false;
         winner = -1;
     }
@@ -405,6 +396,17 @@ int minimax(int depth, int next_valid_spots_Index,
 	return 0;
 }*/
 /*-------------------------------------miniMax end-----------------------------------------------------*/
+
+void read_valid_spots(OthelloBoard &first) {
+    int n_valid_spots;
+    cin >> n_valid_spots;
+    int x, y;
+    for (int i = 0; i < n_valid_spots; i++) {
+        cin >> x >> y;
+        first.next_valid_spots.push_back({x, y});
+    }
+}
+
 void write_valid_spot(OthelloBoard &first) {
     int n_valid_spots = first.next_valid_spots.size();
 
@@ -428,7 +430,7 @@ void write_valid_spot(OthelloBoard &first) {
 int main(int, char** argv) {
     read_board();
     OthelloBoard first(in_board);
-
+    read_valid_spots(first);
     cout << "\n";
     write_valid_spot(first);
     return 0;
